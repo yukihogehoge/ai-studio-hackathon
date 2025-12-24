@@ -1,23 +1,30 @@
 """
 統計データのビジネスロジックを担当
 """
+import time
 from repositories.stats_repository import StatsRepository
-
-# バグ: キャッシュ機構がないため、ページアクセス毎に全データを取得して遅い
-# 修正方法: flask-cachingを使うか、簡易的なメモリキャッシュを実装する
 
 class StatsService:
     """統計データのビジネスロジック"""
 
     def __init__(self):
         self.repository = StatsRepository()
+        self.cache = {}
+        self.cache_timeout = 300
 
     def get_summary(self):
         """基本統計情報を取得"""
+        cached = self.cache.get('summary')
+        now = time.time()
+        if cached:
+            cached_data, cached_time = cached
+            if now - cached_time < self.cache_timeout:
+                return cached_data
+
         summary = self.repository.fetch_summary()
         if not summary:
             # データ取得失敗時のデフォルト値
-            return {
+            summary = {
                 'total_spots': 0,
                 'total_reviews': 0,
                 'total_users': 0,
@@ -27,6 +34,7 @@ class StatsService:
 
         # バグ: NULLチェックをせずにround()を実行するとエラーになる
         summary['avg_rating_overall'] = round(summary['avg_rating_overall'], 1)
+        self.cache['summary'] = (summary, now)
         return summary
 
     def get_spots_by_area(self, area_filter=None):
