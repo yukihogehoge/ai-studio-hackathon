@@ -125,7 +125,7 @@ class StatsRepository:
                     CAST(substr(event_date, 6, 2) AS INTEGER) as month,
                     COUNT(*) as count
                 FROM events
-                GROUP BY month, event_id
+                GROUP BY month
                 ORDER BY month
             ''')
             events = cursor.fetchall()
