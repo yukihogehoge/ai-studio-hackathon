@@ -149,7 +149,7 @@ function createBarChartItem(label, value, maxValue) {
   const barItem = document.createElement("div");
   barItem.className = "bar-chart-item";
 
-  const widthPercent = value * 30; // バグ: 最大値を使っていない（1件でも30%になる）
+  const widthPercent = maxValue > 0 ? (value / maxValue) * 100 : 0;
 
   barItem.innerHTML = `
         <span class="bar-chart-label">${escapeHtml(label)}</span>
