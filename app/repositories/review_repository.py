@@ -14,15 +14,12 @@ class ReviewRepository:
 
         try:
             cursor = conn.cursor()
-            # N+1クエリ問題
-            # JOINを使わずにレビューだけ取得している
-            # ユーザー名は後でservice層でループして取得することになり、N+1問題が発生する
-            # 本来は JOIN users ON r.user_id = u.user_id でユーザー名も一緒に取得すべき
             cursor.execute('''
-                SELECT *
-                FROM reviews
-                WHERE spot_id = ?
-                ORDER BY created_at DESC
+                SELECT r.*, COALESCE(u.name, '不明') as user_name
+                FROM reviews r
+                LEFT JOIN users u ON r.user_id = u.user_id
+                WHERE r.spot_id = ?
+                ORDER BY r.created_at DESC
             ''', (spot_id,))
             reviews = [dict(row) for row in cursor.fetchall()]
             return reviews
