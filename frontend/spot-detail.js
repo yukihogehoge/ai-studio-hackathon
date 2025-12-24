@@ -3,6 +3,15 @@ let currentRating = 0;
 let currentSpotId = null;
 let currentUser = null;
 
+function escapeHtml(text) {
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 // ローカルストレージからユーザー情報を取得
 function loadUserFromStorage() {
   const userData = localStorage.getItem("currentUser");
@@ -171,7 +180,7 @@ async function loadReviews() {
                    </button>`
           : "";
 
-      // XSS脆弱性（review_contentをエスケープせずにHTMLに挿入）
+      // レビュー内容はエスケープしてHTMLに挿入する
       const reviewHtml = `
                 <div class="review-item" data-review-id="${review.review_id}">
                     <div class="review-header">
@@ -181,7 +190,9 @@ async function loadReviews() {
                     <div class="review-rating">${"★".repeat(
                       review.rating
                     )}${"☆".repeat(5 - review.rating)}</div>
-                    <div class="review-text">${review.review_content}</div>
+                    <div class="review-text">${escapeHtml(
+                      review.review_content
+                    )}</div>
                     ${photoHtml}
                     ${deleteButtonHtml}
                 </div>
