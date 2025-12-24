@@ -16,9 +16,15 @@ def get_events():
     # クエリパラメータを取得
     month = request.args.get('month')
     area = request.args.get('area')
+    if month == 'all':
+        month = None
+    if area == 'all':
+        area = None
 
     # フィルター適用
-    if month:
+    if month and area:
+        events = event_service.get_events_by_month_and_area(month, area)
+    elif month:
         events = event_service.get_events_by_month(month)
     elif area:
         events = event_service.get_events_by_area(area)

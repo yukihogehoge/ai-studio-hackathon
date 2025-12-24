@@ -1,5 +1,5 @@
 let allEvents = [];
-let currentFilter = { type: "all", value: "all" };
+let currentFilter = { month: "all", area: "all" };
 
 // データベースからイベントを読み込んで表示
 async function loadEventsFromDatabase() {
@@ -79,10 +79,31 @@ function displayEvents(events) {
   });
 }
 
+async function applyFilters() {
+  try {
+    let events;
+    if (currentFilter.month === "all" && currentFilter.area === "all") {
+      events = await apiClient.getEvents();
+    } else if (currentFilter.month === "all") {
+      events = await apiClient.getEventsByArea(currentFilter.area);
+    } else if (currentFilter.area === "all") {
+      events = await apiClient.getEventsByMonth(currentFilter.month);
+    } else {
+      events = await apiClient.getEventsByMonthAndArea(
+        currentFilter.month,
+        currentFilter.area
+      );
+    }
+    displayEvents(events);
+  } catch (error) {
+    console.error("フィルターエラー:", error);
+    alert("フィルター処理に失敗しました");
+  }
+}
+
 // 月別フィルタリング
 async function filterByMonth(month, clickedButton) {
   const monthButtons = document.querySelectorAll("#monthFilter .filter-btn");
-  const areaButtons = document.querySelectorAll("#areaFilter .filter-btn");
 
   // 月別フィルターのボタンをアクティブに
   monthButtons.forEach((btn) => btn.classList.remove("active"));
@@ -90,30 +111,13 @@ async function filterByMonth(month, clickedButton) {
     clickedButton.classList.add("active");
   }
 
-  // バグ: 地域フィルターをリセットしているため、同時に使えない
-  areaButtons.forEach((btn) => btn.classList.remove("active"));
-  areaButtons[0].classList.add("active");
-
-  currentFilter = { type: "month", value: month };
-
-  try {
-    let events;
-    if (month === "all") {
-      events = await apiClient.getEvents();
-    } else {
-      events = await apiClient.getEventsByMonth(month);
-    }
-    displayEvents(events);
-  } catch (error) {
-    console.error("月別フィルターエラー:", error);
-    alert("フィルター処理に失敗しました");
-  }
+  currentFilter.month = month;
+  await applyFilters();
 }
 
 // 地域別フィルタリング
 async function filterByArea(area, clickedButton) {
   const areaButtons = document.querySelectorAll("#areaFilter .filter-btn");
-  const monthButtons = document.querySelectorAll("#monthFilter .filter-btn");
 
   // 地域別フィルターのボタンをアクティブに
   areaButtons.forEach((btn) => btn.classList.remove("active"));
@@ -121,24 +125,8 @@ async function filterByArea(area, clickedButton) {
     clickedButton.classList.add("active");
   }
 
-  // バグ: 月別フィルターをリセットしているため、同時に使えない
-  monthButtons.forEach((btn) => btn.classList.remove("active"));
-  monthButtons[0].classList.add("active");
-
-  currentFilter = { type: "area", value: area };
-
-  try {
-    let events;
-    if (area === "all") {
-      events = await apiClient.getEvents();
-    } else {
-      events = await apiClient.getEventsByArea(area);
-    }
-    displayEvents(events);
-  } catch (error) {
-    console.error("地域別フィルターエラー:", error);
-    alert("フィルター処理に失敗しました");
-  }
+  currentFilter.area = area;
+  await applyFilters();
 }
 
 // 検索機能
@@ -181,6 +169,7 @@ function clearSearch() {
   document
     .querySelectorAll("#areaFilter .filter-btn")[0]
     .classList.add("active");
+  currentFilter = { month: "all", area: "all" };
 }
 
 // ページ読み込み時に実行
