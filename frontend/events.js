@@ -1,6 +1,15 @@
 let allEvents = [];
 let currentFilter = { month: "all", area: "all" };
 
+function escapeHtml(text) {
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 // データベースからイベントを読み込んで表示
 async function loadEventsFromDatabase() {
   try {
@@ -58,20 +67,26 @@ function displayEvents(events) {
     };
     const areaDisplay = areaNames[event.area] || event.area;
 
-    // XSS脆弱性（event_nameをエスケープせずにHTMLに挿入）
+    // イベント名などはエスケープしてHTMLに挿入する
     eventElement.innerHTML = `
             <div class="event-date-box">
                 <div class="event-month">${month}月</div>
                 <div class="event-day">${day}</div>
             </div>
             <div class="event-info">
-                <h3>${event.event_name}</h3>
+                <h3>${escapeHtml(event.event_name)}</h3>
                 <div class="event-meta">
-                    <span class="event-location">📍 ${event.location}</span>
-                    <span class="event-area">${areaDisplay}</span>
-                    <span class="event-category">${event.category}</span>
+                    <span class="event-location">📍 ${escapeHtml(
+                      event.location
+                    )}</span>
+                    <span class="event-area">${escapeHtml(areaDisplay)}</span>
+                    <span class="event-category">${escapeHtml(
+                      event.category
+                    )}</span>
                 </div>
-                <p class="event-description">${event.description}</p>
+                <p class="event-description">${escapeHtml(
+                  event.description
+                )}</p>
             </div>
         `;
 
