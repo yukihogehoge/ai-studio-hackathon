@@ -13,20 +13,7 @@ class ReviewService:
 
     def get_reviews_by_spot(self, spot_id):
         """観光地のレビューを取得"""
-        # N+1クエリ問題
-        # レビューを取得後、ループ内で各レビューのユーザー名を取得している
-        # レビューが100件あれば、1回（レビュー取得）+ 100回（ユーザー名取得）= 101回のクエリ
-        from repositories.user_repository import UserRepository
-        user_repo = UserRepository()
-
-        reviews = self.review_repo.find_by_spot_id(spot_id)
-
-        # 各レビューにユーザー名を追加（N+1問題発生）
-        for review in reviews:
-            user = user_repo.find_by_id(review['user_id'])
-            review['user_name'] = user['name'] if user else '不明'
-
-        return reviews
+        return self.review_repo.find_by_spot_id(spot_id)
 
     def create_review(self, review_data):
         """レビューを作成（画像なし）"""
